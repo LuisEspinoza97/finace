@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import Login from './pages/Login'
 import Subir from './pages/Subir'
+import Dashboard from './pages/Dashboard'
 import { sesionActiva } from './lib/api'
+import type { Analisis } from './lib/tipos'
 
-type Pantalla = 'cargando' | 'login' | 'subir'
+type Pantalla = 'cargando' | 'login' | 'subir' | 'dashboard'
 type Tema = 'light' | 'dark'
 
 function temaInicial(): Tema {
@@ -15,6 +17,7 @@ function temaInicial(): Tema {
 export default function App() {
   const [pantalla, setPantalla] = useState<Pantalla>('cargando')
   const [tema, setTema] = useState<Tema>(temaInicial)
+  const [datos, setDatos] = useState<Analisis | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = tema
@@ -30,6 +33,11 @@ export default function App() {
     setTema(nuevo)
   }
 
+  function irALogin() {
+    setDatos(null)
+    setPantalla('login')
+  }
+
   return (
     <>
       <button
@@ -43,7 +51,17 @@ export default function App() {
 
       {pantalla === 'cargando' && null}
       {pantalla === 'login' && <Login onEntrar={() => setPantalla('subir')} />}
-      {pantalla === 'subir' && <Subir onSalir={() => setPantalla('login')} />}
+      {pantalla === 'subir' && (
+        <Subir onListo={(json) => { setDatos(json); setPantalla('dashboard') }} onSalir={irALogin} />
+      )}
+      {pantalla === 'dashboard' && datos && (
+        <Dashboard
+          datos={datos}
+          oscuro={tema === 'dark'}
+          onReiniciar={() => { setDatos(null); setPantalla('subir') }}
+          onSalir={irALogin}
+        />
+      )}
     </>
   )
 }

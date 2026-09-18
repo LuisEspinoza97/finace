@@ -1,24 +1,24 @@
 import { ChangeEvent, DragEvent, useRef, useState } from 'react'
 import { analizar, ErrorApi, logout } from '../lib/api'
+import type { Analisis } from '../lib/tipos'
 
 type Props = {
+  onListo: (datos: Analisis) => void
   onSalir: () => void
 }
 
-export default function Subir({ onSalir }: Props) {
+export default function Subir({ onListo, onSalir }: Props) {
   const [arrastrando, setArrastrando] = useState(false)
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [resultado, setResultado] = useState<unknown>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function procesar(archivo: File) {
     setError(null)
-    setResultado(null)
     setProcesando(true)
     try {
       const json = await analizar(archivo)
-      setResultado(json)
+      onListo(json as Analisis)
     } catch (err) {
       setError(err instanceof ErrorApi ? err.message : 'No se pudo conectar con el servidor.')
     } finally {
@@ -52,43 +52,32 @@ export default function Subir({ onSalir }: Props) {
       </div>
 
       <div className="pantalla-contenido">
-        {!resultado && (
-          <div
-            className={`zona-subida${arrastrando ? ' activa' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setArrastrando(true) }}
-            onDragLeave={() => setArrastrando(false)}
-            onDrop={onDrop}
-          >
-            {procesando ? (
-              <p>Analizando tu estado de cuenta...</p>
-            ) : (
-              <>
-                <p>Arrastra aquí el PDF de tu estado de cuenta</p>
-                <p>o</p>
-                <button className="disparador" onClick={() => inputRef.current?.click()}>
-                  Elegir archivo
-                </button>
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="application/pdf"
-                  onChange={onSeleccion}
-                />
-              </>
-            )}
-          </div>
-        )}
+        <div
+          className={`zona-subida${arrastrando ? ' activa' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setArrastrando(true) }}
+          onDragLeave={() => setArrastrando(false)}
+          onDrop={onDrop}
+        >
+          {procesando ? (
+            <p>Analizando tu estado de cuenta...</p>
+          ) : (
+            <>
+              <p>Arrastra aquí el PDF de tu estado de cuenta</p>
+              <p>o</p>
+              <button className="disparador" onClick={() => inputRef.current?.click()}>
+                Elegir archivo
+              </button>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={onSeleccion}
+              />
+            </>
+          )}
+        </div>
 
         {error && <div className="mensaje-error" style={{ maxWidth: 560 }}>{error}</div>}
-
-        {resultado != null && (
-          <>
-            <pre className="json-crudo tabular">{JSON.stringify(resultado, null, 2)}</pre>
-            <button className="boton-secundario" onClick={() => setResultado(null)}>
-              Analizar otro extracto
-            </button>
-          </>
-        )}
       </div>
     </div>
   )
