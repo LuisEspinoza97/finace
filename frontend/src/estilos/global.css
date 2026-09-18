@@ -1,0 +1,178 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+button, input {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+.pantalla {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pantalla-contenido {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.tarjeta {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  padding: 28px 24px;
+}
+
+.tarjeta h1 {
+  font-size: 1.25rem;
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.campo label {
+  font-size: 0.85rem;
+  color: var(--ink2);
+}
+
+.campo input {
+  padding: 10px 12px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: var(--plane);
+  color: var(--ink);
+}
+
+.campo input:focus {
+  outline: 2px solid var(--in);
+  outline-offset: 1px;
+}
+
+.boton-primario {
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--in);
+  color: #fff;
+  font-weight: 600;
+}
+
+.boton-primario:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+.boton-secundario {
+  padding: 8px 14px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+}
+
+.mensaje-error {
+  background: color-mix(in srgb, var(--crit) 12%, var(--surface));
+  border: 1px solid var(--crit);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+.barra-superior {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.toggle-tema {
+  border: 1px solid var(--axis);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+.zona-subida {
+  width: 100%;
+  max-width: 560px;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 2px dashed var(--axis);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink2);
+  text-align: center;
+  padding: 24px;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.zona-subida.activa {
+  border-color: var(--in);
+  background: color-mix(in srgb, var(--in) 8%, var(--surface));
+}
+
+.zona-subida input[type="file"] {
+  display: none;
+}
+
+.zona-subida .disparador {
+  border: 1px solid var(--in);
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--in);
+  font-weight: 600;
+}
+
+.json-crudo {
+  width: 100%;
+  max-width: 900px;
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
