@@ -1,0 +1,15 @@
+.env
+*.pdf
+backend/tests/fixtures/reales/
+*.xlsx
+
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
