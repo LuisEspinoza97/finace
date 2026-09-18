@@ -163,6 +163,16 @@ button {
   display: none;
 }
 
+.opcion-historico {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--ink2);
+  max-width: 460px;
+  text-align: left;
+}
+
 .zona-subida .disparador {
   border: 1px solid var(--in);
   border-radius: 8px;
@@ -198,6 +208,19 @@ button {
 .texto-muted {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.banner-reaplicar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: color-mix(in srgb, var(--in) 10%, var(--surface));
+  border: 1px solid var(--in);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
 }
 
 .banner-aviso {
@@ -399,4 +422,63 @@ details summary {
     grid-template-columns: 1fr;
     gap: 2px;
   }
+}
+
+/* ---------------------------------------------------------------- modal */
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modal-caja {
+  width: 100%;
+  max-width: 640px;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.modal-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.modal-cabecera h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.campo select {
+  padding: 10px 12px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: var(--plane);
+  color: var(--ink);
+}
+
+.form-regla {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--plane);
+  border: 1px solid var(--grid);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.texto-advertencia {
+  color: var(--warn);
+  font-size: 0.8rem;
+  margin: 2px 0 0;
 }

@@ -29,3 +29,18 @@ def test_transferencia_generica_sin_comercio():
 def test_sin_clasificar_cuando_no_hay_regla():
     _, cat, _ = detectar("COMERCIO DESCONOCIDO XYZ")
     assert cat == "SIN CLASIFICAR"
+
+
+def test_regla_de_usuario_clasifica_lo_que_no_tenia_regla():
+    _, cat, _ = detectar("MI TIENDA FAVORITA", [("MI TIENDA FAVORITA", "Compras y ropa")])
+    assert cat == "Compras y ropa"
+
+
+def test_regla_de_usuario_sobrescribe_una_regla_base():
+    _, cat, _ = detectar("NETFLIX", [("NETFLIX", "Entretenimiento y ocio")])
+    assert cat == "Entretenimiento y ocio"
+
+
+def test_sin_reglas_de_usuario_se_comporta_como_antes():
+    _, cat, _ = detectar("NETFLIX", None)
+    assert cat == "Suscripciones digitales"

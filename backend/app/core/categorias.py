@@ -261,14 +261,19 @@ REGLAS: list[tuple[str, str]] = [
 
 # ---------------------------------------------------------------- motor
 
-def detectar(descripcion: str) -> tuple[str, str, str]:
+def detectar(descripcion: str, reglas_usuario: list[tuple[str, str]] | None = None) -> tuple[str, str, str]:
     """Devuelve (comercio_detectado, categoria, grupo) para una descripcion.
 
     Gana la ULTIMA regla que coincida, por eso se recorre al reves y se corta
     en el primer acierto. Si nada coincide -> SIN CLASIFICAR.
+
+    reglas_usuario (opcional) son las reglas que el usuario crea desde el
+    frontend, guardadas en su navegador. Van DESPUES de las base para que
+    puedan sobrescribirlas — misma regla de "gana la ultima".
     """
     texto = (descripcion or "").upper()
-    for clave, categoria in reversed(REGLAS):
+    reglas = REGLAS if not reglas_usuario else REGLAS + reglas_usuario
+    for clave, categoria in reversed(reglas):
         if clave in texto:
             return clave, categoria, POR_NOMBRE[categoria].grupo
     return "", SIN_CLASIFICAR, POR_NOMBRE[SIN_CLASIFICAR].grupo

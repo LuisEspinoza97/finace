@@ -1,9 +1,12 @@
 import { ChangeEvent, DragEvent, useRef, useState } from 'react'
 import { analizar, ErrorApi, logout } from '../lib/api'
 import type { Analisis } from '../lib/tipos'
+import Modal from '../components/Modal'
+import GestorReglas from '../components/reglas/GestorReglas'
+import PanelHistorico from '../components/historico/PanelHistorico'
 
 type Props = {
-  onListo: (datos: Analisis) => void
+  onListo: (datos: Analisis, archivo: File, guardarHistorico: boolean) => void
   onSalir: () => void
 }
 
@@ -11,6 +14,8 @@ export default function Subir({ onListo, onSalir }: Props) {
   const [arrastrando, setArrastrando] = useState(false)
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [guardarHistorico, setGuardarHistorico] = useState(true)
+  const [modalAbierto, setModalAbierto] = useState<'reglas' | 'historico' | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function procesar(archivo: File) {
@@ -18,7 +23,7 @@ export default function Subir({ onListo, onSalir }: Props) {
     setProcesando(true)
     try {
       const json = await analizar(archivo)
-      onListo(json as Analisis)
+      onListo(json as Analisis, archivo, guardarHistorico)
     } catch (err) {
       setError(err instanceof ErrorApi ? err.message : 'No se pudo conectar con el servidor.')
     } finally {
@@ -48,7 +53,11 @@ export default function Subir({ onListo, onSalir }: Props) {
     <div className="pantalla">
       <div className="barra-superior">
         <span>Radiografía Financiera</span>
-        <button className="boton-secundario" onClick={salir}>Cerrar sesión</button>
+        <div className="barra-superior-acciones">
+          <button className="boton-secundario" onClick={() => setModalAbierto('reglas')}>Reglas</button>
+          <button className="boton-secundario" onClick={() => setModalAbierto('historico')}>Histórico</button>
+          <button className="boton-secundario" onClick={salir}>Cerrar sesión</button>
+        </div>
       </div>
 
       <div className="pantalla-contenido">
@@ -77,8 +86,28 @@ export default function Subir({ onListo, onSalir }: Props) {
           )}
         </div>
 
+        <label className="opcion-historico">
+          <input
+            type="checkbox"
+            checked={guardarHistorico}
+            onChange={(e) => setGuardarHistorico(e.target.checked)}
+          />
+          Guardar este análisis en el histórico de este navegador (para comparar meses después)
+        </label>
+
         {error && <div className="mensaje-error" style={{ maxWidth: 560 }}>{error}</div>}
       </div>
+
+      {modalAbierto === 'reglas' && (
+        <Modal titulo="Reglas de categorización" onCerrar={() => setModalAbierto(null)}>
+          <GestorReglas />
+        </Modal>
+      )}
+      {modalAbierto === 'historico' && (
+        <Modal titulo="Histórico" onCerrar={() => setModalAbierto(null)}>
+          <PanelHistorico />
+        </Modal>
+      )}
     </div>
   )
 }

@@ -55,3 +55,44 @@ def test_exito_devuelve_json_y_no_deja_archivo_temporal(cliente_autenticado, mon
     assert "resumen" in r.json()
     assert rutas_usadas, "el parser deberia haber sido llamado"
     assert not Path(rutas_usadas[0]).exists()
+
+
+def test_reglas_de_usuario_se_aplican_al_categorizar(cliente_autenticado, monkeypatch):
+    def falso_parseo(ruta):
+        return Extracto("Banco Pichincha", "****0000", date(2024, 7, 1), date(2024, 7, 31),
+                        100.0, 50.0, [Movimiento(date(2024, 7, 6), "COMERCIO DESCONOCIDO ABC", -50.0)])
+
+    monkeypatch.setattr(analisis_router, "parsear_pdf", falso_parseo)
+    reglas = '[{"clave": "COMERCIO DESCONOCIDO ABC", "categoria": "Compras y ropa"}]'
+    r = cliente_autenticado.post("/api/analizar",
+                                 files={"archivo": ("f.pdf", _pdf_valido(), "application/pdf")},
+                                 data={"reglas": reglas})
+    assert r.status_code == 200
+    assert r.json()["movimientos"][0]["categoria"] == "Compras y ropa"
+
+
+def test_reglas_de_usuario_mal_formadas_se_ignoran_sin_romper(cliente_autenticado, monkeypatch):
+    def falso_parseo(ruta):
+        return Extracto("Banco Pichincha", "****0000", date(2024, 7, 1), date(2024, 7, 31),
+                        100.0, 50.0, [Movimiento(date(2024, 7, 6), "COMERCIO DESCONOCIDO ABC", -50.0)])
+
+    monkeypatch.setattr(analisis_router, "parsear_pdf", falso_parseo)
+    r = cliente_autenticado.post("/api/analizar",
+                                 files={"archivo": ("f.pdf", _pdf_valido(), "application/pdf")},
+                                 data={"reglas": "esto no es json"})
+    assert r.status_code == 200
+    assert r.json()["movimientos"][0]["categoria"] == "SIN CLASIFICAR"
+
+
+def test_reglas_de_usuario_con_categoria_inventada_se_ignoran(cliente_autenticado, monkeypatch):
+    def falso_parseo(ruta):
+        return Extracto("Banco Pichincha", "****0000", date(2024, 7, 1), date(2024, 7, 31),
+                        100.0, 50.0, [Movimiento(date(2024, 7, 6), "COMERCIO DESCONOCIDO ABC", -50.0)])
+
+    monkeypatch.setattr(analisis_router, "parsear_pdf", falso_parseo)
+    reglas = '[{"clave": "COMERCIO DESCONOCIDO ABC", "categoria": "Categoria Que No Existe"}]'
+    r = cliente_autenticado.post("/api/analizar",
+                                 files={"archivo": ("f.pdf", _pdf_valido(), "application/pdf")},
+                                 data={"reglas": reglas})
+    assert r.status_code == 200
+    assert r.json()["movimientos"][0]["categoria"] == "SIN CLASIFICAR"

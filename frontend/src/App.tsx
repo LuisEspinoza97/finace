@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Subir from './pages/Subir'
 import Dashboard from './pages/Dashboard'
 import { sesionActiva } from './lib/api'
+import { guardarEnHistorico } from './lib/historico'
 import type { Analisis } from './lib/tipos'
 
 type Pantalla = 'cargando' | 'login' | 'subir' | 'dashboard'
@@ -18,6 +19,7 @@ export default function App() {
   const [pantalla, setPantalla] = useState<Pantalla>('cargando')
   const [tema, setTema] = useState<Tema>(temaInicial)
   const [datos, setDatos] = useState<Analisis | null>(null)
+  const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = tema
@@ -35,7 +37,15 @@ export default function App() {
 
   function irALogin() {
     setDatos(null)
+    setArchivoOriginal(null)
     setPantalla('login')
+  }
+
+  function alTerminarAnalisis(json: Analisis, archivo: File, guardarHistorico: boolean) {
+    setDatos(json)
+    setArchivoOriginal(archivo)
+    if (guardarHistorico) void guardarEnHistorico(json.resumen)
+    setPantalla('dashboard')
   }
 
   return (
@@ -51,14 +61,14 @@ export default function App() {
 
       {pantalla === 'cargando' && null}
       {pantalla === 'login' && <Login onEntrar={() => setPantalla('subir')} />}
-      {pantalla === 'subir' && (
-        <Subir onListo={(json) => { setDatos(json); setPantalla('dashboard') }} onSalir={irALogin} />
-      )}
+      {pantalla === 'subir' && <Subir onListo={alTerminarAnalisis} onSalir={irALogin} />}
       {pantalla === 'dashboard' && datos && (
         <Dashboard
           datos={datos}
           oscuro={tema === 'dark'}
-          onReiniciar={() => { setDatos(null); setPantalla('subir') }}
+          archivoOriginal={archivoOriginal}
+          onActualizarDatos={setDatos}
+          onReiniciar={() => { setDatos(null); setArchivoOriginal(null); setPantalla('subir') }}
           onSalir={irALogin}
         />
       )}

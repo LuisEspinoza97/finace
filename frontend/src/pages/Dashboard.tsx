@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { moneda, porcentaje } from '../lib/formato'
+import { analizar, ErrorApi } from '../lib/api'
 import type { Analisis } from '../lib/tipos'
 import Tile from '../components/tiles/Tile'
 import GraficoLineaArea from '../components/charts/GraficoLineaArea'
@@ -6,11 +8,16 @@ import BarrasApiladas100 from '../components/charts/BarrasApiladas100'
 import BarrasHorizontales, { ItemBarra } from '../components/charts/BarrasHorizontales'
 import TablaGenerica from '../components/tablas/TablaGenerica'
 import TablaMovimientos from '../components/tablas/TablaMovimientos'
+import Modal from '../components/Modal'
+import GestorReglas from '../components/reglas/GestorReglas'
+import PanelHistorico from '../components/historico/PanelHistorico'
 import type { Recurrente, Duplicado, SinClasificar } from '../lib/tipos'
 
 type Props = {
   datos: Analisis
   oscuro: boolean
+  archivoOriginal: File | null
+  onActualizarDatos: (datos: Analisis) => void
   onReiniciar: () => void
   onSalir: () => void
 }
@@ -22,8 +29,31 @@ const COLOR_NIVEL: Record<string, string> = {
   bien: 'var(--goodtx)',
 }
 
-export default function Dashboard({ datos, oscuro, onReiniciar, onSalir }: Props) {
+export default function Dashboard({ datos, oscuro, archivoOriginal, onActualizarDatos, onReiniciar, onSalir }: Props) {
   const { resumen, alerta } = datos
+  const [modalAbierto, setModalAbierto] = useState<'reglas' | 'historico' | null>(null)
+  const [claveSugerida, setClaveSugerida] = useState<string | undefined>(undefined)
+  const [reaplicando, setReaplicando] = useState(false)
+  const [errorReaplicar, setErrorReaplicar] = useState<string | null>(null)
+
+  function abrirReglasPara(descripcion: string) {
+    setClaveSugerida(descripcion)
+    setModalAbierto('reglas')
+  }
+
+  async function reaplicarReglas() {
+    if (!archivoOriginal) return
+    setReaplicando(true)
+    setErrorReaplicar(null)
+    try {
+      const nuevo = await analizar(archivoOriginal)
+      onActualizarDatos(nuevo as Analisis)
+    } catch (err) {
+      setErrorReaplicar(err instanceof ErrorApi ? err.message : 'No se pudo volver a analizar el archivo.')
+    } finally {
+      setReaplicando(false)
+    }
+  }
 
   const hayExtraordinarios = resumen.extraordinarios > 0
   const cifraGrande = hayExtraordinarios ? resumen.neto_real : resumen.neto
@@ -72,12 +102,24 @@ export default function Dashboard({ datos, oscuro, onReiniciar, onSalir }: Props
       <div className="barra-superior">
         <span>Radiografía Financiera</span>
         <div className="barra-superior-acciones">
+          <button className="boton-secundario" onClick={() => setModalAbierto('reglas')}>Reglas</button>
+          <button className="boton-secundario" onClick={() => setModalAbierto('historico')}>Histórico</button>
           <button className="boton-secundario" onClick={onReiniciar}>Analizar otro extracto</button>
           <button className="boton-secundario" onClick={onSalir}>Cerrar sesión</button>
         </div>
       </div>
 
       <div className="dashboard">
+        {archivoOriginal && (
+          <div className="banner-reaplicar">
+            <span>¿Creaste o cambiaste una regla? Vuelve a analizar el mismo PDF para aplicarla.</span>
+            <button className="boton-secundario" onClick={reaplicarReglas} disabled={reaplicando}>
+              {reaplicando ? 'Aplicando...' : 'Reaplicar mis reglas'}
+            </button>
+          </div>
+        )}
+        {errorReaplicar && <div className="mensaje-error">{errorReaplicar}</div>}
+
         {datos.avisos.length > 0 && (
           <div className="banner-aviso">
             El banco declara cifras que no coinciden exactamente con lo que calculé:
@@ -230,7 +272,7 @@ export default function Dashboard({ datos, oscuro, onReiniciar, onSalir }: Props
         <section className="seccion">
           <h2>Sin clasificar</h2>
           <p className="subtitulo">
-            El motor no reconoció estos comercios. Aún no puedes crear reglas desde aquí — llega en la próxima fase.
+            El motor no reconoció estos comercios. Crea una regla para que los reconozca la próxima vez.
           </p>
           <TablaGenerica<SinClasificar>
             filas={datos.sin_clasificar}
@@ -239,6 +281,13 @@ export default function Dashboard({ datos, oscuro, onReiniciar, onSalir }: Props
               { header: 'Descripción', render: (s) => s.descripcion },
               { header: 'Veces', render: (s) => s.n, numerica: true },
               { header: 'Monto', render: (s) => moneda(s.monto), numerica: true },
+              {
+                header: '', render: (s) => (
+                  <button className="boton-secundario" onClick={() => abrirReglasPara(s.descripcion)}>
+                    Crear regla
+                  </button>
+                ),
+              },
             ]}
           />
         </section>
@@ -248,6 +297,17 @@ export default function Dashboard({ datos, oscuro, onReiniciar, onSalir }: Props
           <TablaMovimientos movimientos={datos.movimientos} />
         </section>
       </div>
+
+      {modalAbierto === 'reglas' && (
+        <Modal titulo="Reglas de categorización" onCerrar={() => { setModalAbierto(null); setClaveSugerida(undefined) }}>
+          <GestorReglas claveSugerida={claveSugerida} />
+        </Modal>
+      )}
+      {modalAbierto === 'historico' && (
+        <Modal titulo="Histórico" onCerrar={() => setModalAbierto(null)}>
+          <PanelHistorico />
+        </Modal>
+      )}
     </div>
   )
 }

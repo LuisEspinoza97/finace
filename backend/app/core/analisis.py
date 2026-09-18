@@ -152,14 +152,15 @@ def serie_diaria(ext: Extracto) -> list[dict]:
 
 # --------------------------------------------------------- 4. lo repetido
 
-def recurrentes(ext: Extracto, minimo: int = 2) -> list[dict]:
+def recurrentes(ext: Extracto, minimo: int = 2,
+                reglas_usuario: list[tuple[str, str]] | None = None) -> list[dict]:
     """Mismo concepto + mismo monto exacto, >= 2 veces. Asi viven las suscripciones.
 
     LIMITE CONOCIDO: un cobro que cambia de valor (luz, agua) no se detecta. Para
     esos hace falta comparar varios meses, y este sistema no guarda historico en
     el servidor. Se resuelve en el navegador, comparando extractos importados.
     """
-    c = Counter((detectar(m.descripcion)[0] or m.descripcion, round(m.monto, 2))
+    c = Counter((detectar(m.descripcion, reglas_usuario)[0] or m.descripcion, round(m.monto, 2))
                 for m in ext.movimientos if m.monto < 0)
     out = [{"concepto": k[0], "monto": round(-k[1], 2), "veces": v,
             "total": round(-k[1] * v, 2)}
@@ -195,13 +196,13 @@ def comisiones(ext: Extracto) -> dict:
 
 # ------------------------------------------------------- 5. las categorias
 
-def por_categoria(ext: Extracto) -> list[dict]:
+def por_categoria(ext: Extracto, reglas_usuario: list[tuple[str, str]] | None = None) -> list[dict]:
     tot: dict[str, float] = defaultdict(float)
     cuenta: dict[str, int] = defaultdict(int)
     for m in ext.movimientos:
         if m.monto >= 0:
             continue
-        _, cat, _ = detectar(m.descripcion)
+        _, cat, _ = detectar(m.descripcion, reglas_usuario)
         tot[cat] += -m.monto
         cuenta[cat] += 1
     salidas = ext.salidas or 1
@@ -219,12 +220,12 @@ def por_categoria(ext: Extracto) -> list[dict]:
     return sorted(out, key=lambda x: -x["monto"])
 
 
-def por_grupo(ext: Extracto) -> list[dict]:
+def por_grupo(ext: Extracto, reglas_usuario: list[tuple[str, str]] | None = None) -> list[dict]:
     tot: dict[str, float] = defaultdict(float)
     for m in ext.movimientos:
         if m.monto >= 0:
             continue
-        tot[detectar(m.descripcion)[2]] += -m.monto
+        tot[detectar(m.descripcion, reglas_usuario)[2]] += -m.monto
     salidas = ext.salidas or 1
     return [{"grupo": g, "monto": round(tot.get(g, 0.0), 2),
              "pct": round(tot.get(g, 0.0) / salidas, 4), "objetivo": obj,
@@ -232,20 +233,21 @@ def por_grupo(ext: Extracto) -> list[dict]:
             for g, obj in OBJETIVO_GRUPO.items()]
 
 
-def top(ext: Extracto, gastos: bool = True, n: int = 10) -> list[dict]:
+def top(ext: Extracto, gastos: bool = True, n: int = 10,
+       reglas_usuario: list[tuple[str, str]] | None = None) -> list[dict]:
     sel = [m for m in ext.movimientos if (m.monto < 0) == gastos]
     sel.sort(key=lambda m: -abs(m.monto))
     return [{"fecha": m.fecha.isoformat(), "descripcion": m.descripcion,
              "monto": round(abs(m.monto), 2),
-             "categoria": detectar(m.descripcion)[1]} for m in sel[:n]]
+             "categoria": detectar(m.descripcion, reglas_usuario)[1]} for m in sel[:n]]
 
 
-def sin_clasificar(ext: Extracto) -> list[dict]:
+def sin_clasificar(ext: Extracto, reglas_usuario: list[tuple[str, str]] | None = None) -> list[dict]:
     """Lo que el motor no supo categorizar. Se muestra al usuario para que cree
     la regla: es asi como el sistema aprende sus comercios."""
     out = defaultdict(lambda: {"n": 0, "monto": 0.0})
     for m in ext.movimientos:
-        if detectar(m.descripcion)[1] == "SIN CLASIFICAR":
+        if detectar(m.descripcion, reglas_usuario)[1] == "SIN CLASIFICAR":
             k = out[m.descripcion]
             k["n"] += 1
             k["monto"] += abs(m.monto)
@@ -255,7 +257,7 @@ def sin_clasificar(ext: Extracto) -> list[dict]:
 
 # ------------------------------------------------------------- 6. el todo
 
-def analizar(ext: Extracto) -> dict:
+def analizar(ext: Extracto, reglas_usuario: list[tuple[str, str]] | None = None) -> dict:
     r = resumen(ext)
     return {
         "resumen": r,
@@ -266,17 +268,17 @@ def analizar(ext: Extracto) -> dict:
         "tramos_entradas": por_tramo(ext, False),
         "fragmentacion": fragmentacion(ext),
         "serie": serie_diaria(ext),
-        "grupos": por_grupo(ext),
-        "categorias": por_categoria(ext),
-        "top_salidas": top(ext, True, 10),
-        "top_entradas": top(ext, False, 15),
-        "recurrentes": recurrentes(ext),
+        "grupos": por_grupo(ext, reglas_usuario),
+        "categorias": por_categoria(ext, reglas_usuario),
+        "top_salidas": top(ext, True, 10, reglas_usuario),
+        "top_entradas": top(ext, False, 15, reglas_usuario),
+        "recurrentes": recurrentes(ext, reglas_usuario=reglas_usuario),
         "duplicados": duplicados(ext),
         "comisiones": comisiones(ext),
-        "sin_clasificar": sin_clasificar(ext),
+        "sin_clasificar": sin_clasificar(ext, reglas_usuario),
         "avisos": ext.avisos,
         "movimientos": [{"fecha": m.fecha.isoformat(), "descripcion": m.descripcion,
                          "monto": m.monto, "saldo": m.saldo,
-                         "categoria": detectar(m.descripcion)[1]}
+                         "categoria": detectar(m.descripcion, reglas_usuario)[1]}
                         for m in ext.movimientos],
     }

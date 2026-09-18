@@ -1,3 +1,5 @@
+import { obtenerReglas } from './reglas'
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export class ErrorApi extends Error {}
@@ -37,6 +39,7 @@ export async function sesionActiva(): Promise<boolean> {
 export async function analizar(archivo: File): Promise<unknown> {
   const form = new FormData()
   form.append('archivo', archivo)
+  form.append('reglas', JSON.stringify(obtenerReglas()))
   const r = await fetch(`${BASE_URL}/api/analizar`, {
     method: 'POST',
     credentials: 'include',
