@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/api/yo', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Sin "ports": solo el servicio "web" es alcanzable desde fuera del
+    # contenedor. El navegador nunca habla directo con la API (ver
+    # frontend/nginx.conf) -- si necesitas pegarle con curl desde el host
+    # para depurar, agrega aqui "ports: [\"8000:8000\"]".
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

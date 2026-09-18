@@ -1,4 +1,4 @@
-"""FastAPI app. Sin frontend todavia (fase 3+): solo login y el endpoint de analisis."""
+"""FastAPI app: login y el endpoint de analisis."""
 
 from __future__ import annotations
 
