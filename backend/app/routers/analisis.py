@@ -8,11 +8,12 @@ import tempfile
 import time
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from starlette.requests import Request
 
+from app.auth import requiere_sesion
 from app.core.analisis import analizar
 from app.core.parsers import parsear_pdf
 
@@ -25,7 +26,7 @@ MAX_BYTES = 10 * 1024 * 1024
 MAGIC_PDF = b"%PDF-"
 
 
-@router.post("/api/analizar")
+@router.post("/api/analizar", dependencies=[Depends(requiere_sesion)])
 @limiter.limit("20/minute")
 async def analizar_endpoint(request: Request, archivo: UploadFile):
     contenido = await archivo.read()

@@ -8,7 +8,11 @@ dependencies = [
     "python-multipart>=0.0.9",
     "slowapi>=0.1.9",
     "pyjwt>=2.9",
-    "passlib[bcrypt]>=1.7",
+    "passlib>=1.7",
+    # passlib 1.7.4 (ultima release, el proyecto esta sin mantenimiento) lee
+    # bcrypt.__about__.__version__, que bcrypt >=4.0 elimino. Fijar <4 evita
+    # el crash "module 'bcrypt' has no attribute '__about__'" al hashear.
+    "bcrypt>=3.2,<4.0",
 ]
 
 [project.optional-dependencies]

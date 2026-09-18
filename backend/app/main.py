@@ -1,4 +1,4 @@
-"""FastAPI app. Fase 1: sin auth, sin frontend — solo el endpoint de analisis."""
+"""FastAPI app. Sin frontend todavia (fase 3+): solo login y el endpoint de analisis."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.auth import router as auth_router
 from app.routers.analisis import limiter, router as analisis_router
 
 logging.basicConfig(level=logging.INFO)
@@ -35,4 +36,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(analisis_router)
