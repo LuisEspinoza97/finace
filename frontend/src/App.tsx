@@ -26,7 +26,9 @@ export default function App() {
   }, [tema])
 
   useEffect(() => {
-    sesionActiva().then((activa) => setPantalla(activa ? 'subir' : 'login'))
+    sesionActiva()
+      .then((activa) => setPantalla(activa ? 'subir' : 'login'))
+      .catch(() => setPantalla('login'))
   }, [])
 
   function alternarTema() {
