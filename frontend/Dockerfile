@@ -4,10 +4,12 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 # Vacio = rutas relativas ("/api/..."): nginx (ver nginx.conf) las reenvia
-# al backend por la red interna. Es el valor correcto para esta imagen;
-# solo lo cambiarias si sirves el frontend en un dominio y el backend en
-# otro sin proxy de por medio.
-ARG VITE_API_URL=
+# al backend por la red interna. docker-compose.yml sobreescribe esto
+# explicitamente a "" con build.args. El valor por defecto de aqui abajo
+# es para Render, que NO soporta pasar build args por render.yaml: apunta
+# directo a la URL publica de "finace-api" (ver render.yaml), ya que ahi
+# no hay proxy interno y cada servicio queda en su propio subdominio.
+ARG VITE_API_URL=https://finace-api.onrender.com
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 

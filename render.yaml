@@ -32,5 +32,5 @@ services:
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
     plan: free
-    dockerBuildArgs:
-      VITE_API_URL: https://finace-api.onrender.com
+    # Render no soporta build args por Blueprint: VITE_API_URL queda fijo
+    # como default del ARG en frontend/Dockerfile (apunta a finace-api).
