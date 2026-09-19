@@ -25,6 +25,13 @@ JWT_ALGORITHM = "HS256"
 JWT_TTL = timedelta(days=7)
 COOKIE_NAME = "sesion"
 
+# "strict" cuando frontend y backend comparten dominio (el nginx de
+# docker-compose hace de proxy, ver frontend/nginx.conf). Si los despliegas
+# en dominios separados (ej. dos servicios de Render), el navegador los trata
+# como sitios distintos y "strict" bloquea la cookie: en ese caso hay que
+# definir COOKIE_SAMESITE=none.
+COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "strict").lower()
+
 # Bloqueo progresivo: a partir del intento 6, la espera se duplica en cada
 # fallo adicional (1 min, 2 min, 4 min, ...). Es en memoria de proceso: un
 # solo usuario, no hace falta persistirlo.
@@ -105,13 +112,13 @@ def login(cred: Credenciales, response: Response):
     _bloqueado_hasta = 0.0
     token = _crear_token()
     response.set_cookie(COOKIE_NAME, token, httponly=True, secure=True,
-                        samesite="strict", max_age=int(JWT_TTL.total_seconds()))
+                        samesite=COOKIE_SAMESITE, max_age=int(JWT_TTL.total_seconds()))
     return {"ok": True}
 
 
 @router.post("/api/logout")
 def logout(response: Response):
-    response.delete_cookie(COOKIE_NAME)
+    response.delete_cookie(COOKIE_NAME, httponly=True, secure=True, samesite=COOKIE_SAMESITE)
     return {"ok": True}
 
 
