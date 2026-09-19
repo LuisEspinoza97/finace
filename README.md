@@ -91,6 +91,38 @@ servicios tienen healthcheck (`docker compose ps` te dice si están
 
 Para bajarlo: `docker compose down`. Para ver logs: `docker compose logs -f`.
 
+## Probarlo gratis en Render (sin instalar nada)
+
+Si solo quieres un link para probar la app sin montar servidor propio,
+`render.yaml` en la raíz define un Blueprint que crea los dos servicios
+automáticamente:
+
+1. Crea una cuenta gratis en [render.com](https://render.com) (con tu
+   GitHub, un clic).
+2. En el dashboard: **New → Blueprint** → conecta el repo `finace`.
+3. Render lee `render.yaml` y te pide 3 valores (los mismos de siempre):
+   `APP_USUARIO`, `APP_PASSWORD_HASH` y deja que genere `JWT_SECRET` solo.
+
+   ⚠️ Aquí **NO** escapes el `$` del hash bcrypt — esa interpolación es
+   una particularidad de Docker Compose leyendo archivos `.env`. El campo
+   de Render es un campo de texto normal, pega el hash tal cual te lo dio
+   `python -m app.auth hash`.
+
+4. Espera a que ambos servicios (`finace-api`, `finace-web`) terminen de
+   compilar (unos minutos, el plan free es lento para arrancar). Abre la
+   URL de `finace-web` que te da Render.
+
+Esta variante despliega frontend y backend como dos servicios públicos
+separados (cada uno con su propio dominio `*.onrender.com`), a diferencia
+de Docker Compose que los pone detrás de un solo dominio. Por eso
+`render.yaml` fija `COOKIE_SAMESITE=none` y `CORS_ORIGINS` con la URL del
+frontend — sin esto, el navegador trata `finace-web.onrender.com` y
+`finace-api.onrender.com` como sitios distintos y bloquea la cookie de
+sesión.
+
+El plan free de Render duerme el servicio tras un rato sin uso: la
+primera petición después de eso tarda ~30-60s en despertar.
+
 ## Desarrollo local sin Docker
 
 **Backend:**

@@ -1,0 +1,36 @@
+# Blueprint de Render (https://render.com/docs/blueprint-spec). En el
+# dashboard: New -> Blueprint -> conectar este repo -> Render lee este
+# archivo y crea los dos servicios solo. Solo pide los 3 valores secretos.
+#
+# Frontend y backend quedan en dominios *.onrender.com distintos (no hay
+# proxy interno como en docker-compose), asi que se comunican por HTTPS
+# publico: CORS_ORIGINS y COOKIE_SAMESITE=none reemplazan al proxy de
+# frontend/nginx.conf para este caso.
+services:
+  - type: web
+    name: finace-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/yo
+    envVars:
+      - key: APP_USUARIO
+        sync: false
+      - key: APP_PASSWORD_HASH
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: CORS_ORIGINS
+        value: https://finace-web.onrender.com
+
+  - type: web
+    name: finace-web
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    dockerBuildArgs:
+      VITE_API_URL: https://finace-api.onrender.com
