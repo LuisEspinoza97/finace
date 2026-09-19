@@ -3,19 +3,17 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-# Vacio = rutas relativas ("/api/..."): nginx (ver nginx.conf) las reenvia
-# al backend por la red interna. docker-compose.yml sobreescribe esto
-# explicitamente a "" con build.args. El valor por defecto de aqui abajo
-# es para Render, que NO soporta pasar build args por render.yaml: apunta
-# directo a la URL publica de "finace-api" (ver render.yaml), ya que ahi
-# no hay proxy interno y cada servicio queda en su propio subdominio.
-ARG VITE_API_URL=https://finace-api.onrender.com
-ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# La imagen oficial corre todo script ejecutable de aqui al ARRANCAR el
+# contenedor. 40-runtime-config.sh genera config.js con la env var API_URL
+# (ver frontend/lib/api.ts) -- asi la URL del backend se puede cambiar sin
+# reconstruir la imagen, util porque Render puede agregarle un sufijo
+# random al nombre del servicio si ya esta tomado.
+COPY docker-entrypoint.d/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
 
 EXPOSE 80
 

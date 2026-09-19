@@ -1,6 +1,18 @@
 import { obtenerReglas } from './reglas'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+declare global {
+  interface Window { __API_URL__?: string }
+}
+
+// Prioridad: window.__API_URL__ (config.js, generado al ARRANCAR el
+// contenedor a partir de la env var API_URL -- ver
+// frontend/docker-entrypoint.d/40-runtime-config.sh) sobre
+// import.meta.env.VITE_API_URL (solo aplica a `npm run dev`/`npm run
+// build`, se fija al COMPILAR). El primero existe para poder cambiar la
+// URL del backend en Render sin reconstruir la imagen -- Render a veces
+// le agrega un sufijo random al nombre del servicio si ya esta tomado, y
+// eso no se sabe hasta despues del primer deploy.
+const BASE_URL = window.__API_URL__ || import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export class ErrorApi extends Error {}
 

@@ -7,6 +7,11 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Generado al arrancar el contenedor (ver
+         frontend/docker-entrypoint.d/40-runtime-config.sh), no al compilar.
+         En `npm run dev` no existe y da 404 en consola sin romper nada: el
+         código usa VITE_API_URL como respaldo (ver lib/api.ts). -->
+    <script src="/config.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

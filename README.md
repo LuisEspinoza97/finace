@@ -109,8 +109,18 @@ automáticamente:
    `python -m app.auth hash`.
 
 4. Espera a que ambos servicios (`finace-api`, `finace-web`) terminen de
-   compilar (unos minutos, el plan free es lento para arrancar). Abre la
-   URL de `finace-web` que te da Render.
+   compilar (unos minutos, el plan free es lento para arrancar).
+
+5. **Importante**: los nombres de servicio son globales en Render — si
+   `finace-api` ya está tomado por otra cuenta, Render le agrega un sufijo
+   random (ej. `finace-api-pzr5.onrender.com`). Entra a la página de
+   `finace-api` en el dashboard y copia su URL real. Pégala en la env var
+   **`API_URL`** del servicio `finace-web` (Environment → Edit) y dale
+   **Restart** — no hace falta reconstruir nada, se lee al arrancar el
+   contenedor. Si `finace-web` también salió con sufijo, actualiza además
+   `CORS_ORIGINS` en `finace-api` con esa URL real.
+
+6. Abre la URL de `finace-web`.
 
 Esta variante despliega frontend y backend como dos servicios públicos
 separados (cada uno con su propio dominio `*.onrender.com`), a diferencia

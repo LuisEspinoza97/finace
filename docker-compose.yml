@@ -19,8 +19,11 @@ services:
   web:
     build:
       context: ./frontend
-      args:
-        VITE_API_URL: ""
+    environment:
+      # Vacio = rutas relativas ("/api/..."): nginx.conf las reenvia a "api"
+      # por la red interna de compose. Se lee al arrancar el contenedor, ver
+      # frontend/docker-entrypoint.d/40-runtime-config.sh.
+      API_URL: ""
     restart: unless-stopped
     depends_on:
       api:

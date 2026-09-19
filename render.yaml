@@ -32,5 +32,12 @@ services:
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: ./frontend
     plan: free
-    # Render no soporta build args por Blueprint: VITE_API_URL queda fijo
-    # como default del ARG en frontend/Dockerfile (apunta a finace-api).
+    envVars:
+      # Render a veces le agrega un sufijo random al nombre del servicio si
+      # "finace-api" ya esta tomado por otra cuenta (los nombres son
+      # globales) -- por eso esto no puede venir fijo aqui. Despues del
+      # primer deploy, copia la URL real de "finace-api" (la ves en su
+      # pagina del dashboard) y pegala aqui. No hace falta reconstruir la
+      # imagen: se lee al arrancar el contenedor, alcanza con reiniciarlo.
+      - key: API_URL
+        sync: false
